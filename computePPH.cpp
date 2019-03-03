@@ -125,50 +125,84 @@ Indices of pXmarked agree with pX.
     vector<vector<vector<int>>> t1(p1.size());
     vector<vector<vector<int>>> t2(p2.size());
     
-// this goes inside loop
-    print2DIntVector(p1);
-
+// Loop over 1-paths
+    //print2DIntVector(p1);
     // adding 0 at end bc all are 0-paths
     vector<vector<int>> summands0;
     int maxIdx0;
 
-    int j = 0;
+    for (int j = 0; j<p1.size(); ++j){
 
-    tie(summands0, maxIdx0) = basisChange(p1[0],p0marked, p0,t0);
-    t0[maxIdx0] = summands0;
-    cout << "at t0 index " << maxIdx0 << " we have " << endl;
-    print2DIntVector(t0[maxIdx0]);
-    cout << "next"<<endl;
-
-    j = 1;
-
-    tie(summands0, maxIdx0) = basisChange(p1[1],p0marked, p0,t0);
-    t0[maxIdx0] = summands0;
-    cout << "at t0 index " << maxIdx0 << " we have " << endl;
-    print2DIntVector(t0[maxIdx0]);
-    cout << "next"<<endl;
-
-    j = 2;
-
-    tie(summands0, maxIdx0) = basisChange(p1[2],p0marked, p0,t0);
-    if (summands0.empty()){
-        cout << "empty sum" << endl;
-        p1marked[j] = true;
-
+        tie(summands0, maxIdx0) = basisChange(p1[j],p0marked, p0,t0);
+        // if we get summand and slot empty, fill slot
+        // otherwise summand is empty, mark and move on
+        if (summands0.empty()){
+            p1marked[j] = true;
+        }
+        else {
+            t0[maxIdx0] = summands0;
+        }
+/*
         t0[maxIdx0] = summands0;
         cout << "at t0 index " << maxIdx0 << " we have " << endl;
         print2DIntVector(t0[maxIdx0]);
+        cout << "next"<<endl;
+
+        j = 1;
+
+        tie(summands0, maxIdx0) = basisChange(p1[1],p0marked, p0,t0);
+        t0[maxIdx0] = summands0;
+        cout << "at t0 index " << maxIdx0 << " we have " << endl;
+        print2DIntVector(t0[maxIdx0]);
+        cout << "next"<<endl;
+
+        j = 2;
+
+        tie(summands0, maxIdx0) = basisChange(p1[2],p0marked, p0,t0);
+        if (summands0.empty()){
+            cout << "empty sum" << endl;
+            p1marked[j] = true;
+
+            t0[maxIdx0] = summands0;
+            cout << "at t0 index " << maxIdx0 << " we have " << endl;
+            print2DIntVector(t0[maxIdx0]);
+        }
+        
+        cout << "marked 0" << endl;
+        print1DBoolVector(p0marked);
+        cout << "marked 1" << endl;
+        print1DBoolVector(p1marked);
+*/
+
     }
-    
-    cout << "marked 0" << endl;
-    print1DBoolVector(p0marked);
-    cout << "marked 1" << endl;
-    print1DBoolVector(p1marked);
+    //print1DBoolVector(p1marked);
 
 
+// Loop over 2-paths
+    print2DIntVector(p2);
+    // adding 1 at end bc all are 1-paths
+    vector<vector<int>> summands1;
+    int maxIdx1;
 
+    for (int j = 0; j<p2.size(); ++j){
 
-
+        tie(summands1, maxIdx1) = basisChange(p2[j],p1marked, p1,t1);
+        // if we get summand and slot empty, fill slot
+        // otherwise summand is empty, mark and move on
+        if (summands1.empty()){
+            p2marked[j] = true;
+        }
+        else {
+            t1[maxIdx1] = summands1;
+        }
+    }
+    print1DBoolVector(p2marked);
+    cout << "let's check slots" << endl;
+    print2DIntVector(t1[3]);
+    cout << "let's check slots" << endl;
+    print2DIntVector(t1[4]);
+    cout << "let's check slots" << endl;
+    print2DIntVector(t1[5]);
     return 0;
 }
 
@@ -196,9 +230,9 @@ need this if k = 1;
     if (kpath.size()>1){
         summands = removeUnmarked(summands, pjmarked, pj);
     }
-    print1DIntVector(kpath);
-    cout << "boundary" << endl;
-    print2DIntVector(summands);
+    //print1DIntVector(kpath);
+    //cout << "boundary" << endl;
+    //print2DIntVector(summands);
 
     // Loop will start here
     while (!summands.empty()){ 
@@ -207,11 +241,11 @@ need this if k = 1;
     */
         int summandIdx;
         tie(maxIdx,summandIdx)=getMaxIdx(summands,pj);
-        cout << "maxidx is " << maxIdx << endl;
-        cout << "summandidx is " << summandIdx << endl;
+        //cout << "maxidx is " << maxIdx << endl;
+        //cout << "summandidx is " << summandIdx << endl;
 
 
-        cout << "is spot empty?" << tj[maxIdx].empty() << endl;
+        //cout << "is spot empty?" << tj[maxIdx].empty() << endl;
 
         if (tj[maxIdx].empty()){
             // if empty, break out of loop
@@ -220,12 +254,12 @@ need this if k = 1;
         // column reduction step
         // 
         summands = symDiff(summands, tj[maxIdx]);
-        cout << "summands are " << endl;
-        print2DIntVector(summands);
+        //cout << "summands are " << endl;
+        //print2DIntVector(summands);
     }
 
     if (summands.empty()){
-        cout << "ok got empty summand" << endl;
+        //cout << "ok got empty summand" << endl;
     }
 
     return make_tuple(summands, maxIdx);
