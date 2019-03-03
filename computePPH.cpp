@@ -4,6 +4,16 @@ Code to compute persistent path homology of a network.
 Author: Samir Chowdhury
 Date: ()
 
+To-do as of March 3, 2019:
+- main file is very cluttered. modularize.
+- only finite 1-dim persistence is being reported 
+right now. need to add code to read the infinite
+1-dim bars as well. 
+- also find a way to pipe the data file 
+directly from the terminal
+- add functionality for timing the code
+
+
 
 */
 
@@ -65,7 +75,8 @@ int main()
     int numNodes;
     vector<vector<double> > edgeData;
     string fileName;
-    fileName = "cyc3.txt";
+    //fileName = "cyc3.txt";
+    fileName = "cycleNet25.txt";
 
     tie(numNodes,edgeData) = readFile(fileName);
     vector<vector<int>> p0 = getp0(numNodes);
@@ -77,33 +88,9 @@ int main()
     vector<double> p2time;
     tie(p2time,p2) = getp2(edgeData);
     
-    //print2DIntVector(p1);
-    /*
-    vector<int> tmp;
-    tmp.push_back(1);
-    tmp.push_back(2);
-    tmp.push_back(1);
-    */
-    //print1DIntVector(tmp);
-
-    //bool found_tmp;
-    //int index_found_tmp;
-    //tie(found_tmp,index_found_tmp)=findPathInList(tmp,p1);
-
-    //cout << "found_tmp " << found_tmp << endl;
-    //cout << "index " << index_found_tmp << endl;
-    //isPathInList(tmp,p1);
-
-
-    //vector<vector<int>> summands = simpleBoundary(tmp);
-    //print2DIntVector(summands);
 
     addInfAPaths(p1,p1time,p2);
-    //print2DIntVector(p1);
-    //print1DVector(p1time);
-    //print2DIntVector(p0);
-
-
+    
 
 /*
 Marked paths
@@ -130,6 +117,7 @@ Indices of pXmarked agree with pX.
     // adding 0 at end bc all are 0-paths
     vector<vector<int>> summands0;
     int maxIdx0;
+
 
     for (int j = 0; j<p1.size(); ++j){
 
@@ -179,10 +167,16 @@ Indices of pXmarked agree with pX.
 
 
 // Loop over 2-paths
-    print2DIntVector(p2);
+    //print2DIntVector(p2);
     // adding 1 at end bc all are 1-paths
     vector<vector<int>> summands1;
     int maxIdx1;
+
+    int birth;
+    int death;
+    vector<int> tmpPers;
+
+    vector<vector<int>> pers1;
 
     for (int j = 0; j<p2.size(); ++j){
 
@@ -194,8 +188,27 @@ Indices of pXmarked agree with pX.
         }
         else {
             t1[maxIdx1] = summands1;
+            /*
+            Calculating persistence a little haphazardly
+            Because 1-paths have at = et,
+            calculating et(p1[maxIdx1]) is easy. This is 
+            entry time of the boundary summand with highest index.
+            Death time will be et(p2[j]), which is max of 
+            at(p1[maxIdx1]) and at(p2[j])
+            */
+            birth = p1time[maxIdx1];
+            death = p2time[j];
+            if (birth < death){
+                tmpPers.push_back(birth);
+                tmpPers.push_back(death);
+                pers1.push_back(tmpPers);
+            }
+            tmpPers.clear();
+
+
         }
     }
+    /*
     print1DBoolVector(p2marked);
     cout << "let's check slots" << endl;
     print2DIntVector(t1[3]);
@@ -203,6 +216,9 @@ Indices of pXmarked agree with pX.
     print2DIntVector(t1[4]);
     cout << "let's check slots" << endl;
     print2DIntVector(t1[5]);
+    */
+    cout << "done!" << "pers1 is " << endl;
+    print2DIntVector(pers1);
     return 0;
 }
 
