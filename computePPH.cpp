@@ -32,8 +32,17 @@ tuple<vector<double>, vector<vector<int>>> getp2(vector<vector<double>> &edgeDat
 vector<vector<int>> simpleBoundary(vector<int> &path);
 void addInfAPaths(vector<vector<int>> &p1, vector<double> &p1time, vector<vector<int>> &p2);
 
-void buildSlots(vector<vector<int>> &p0, vector<vector<int>> &p1, vector<vector<int>> &p2,
+tuple<vector<vector<int>>, int>  basisChange(vector<int> &kpath, 
+vector<bool> &pjmarked, vector<vector<int>> &pj, vector<vector<vector<int>>> &tj);
+
+vector<vector<int>> removeUnmarked(vector<vector<int>> &pjsummands, vector<bool> &pjmarked, vector<vector<int>> &pj);
+
+tuple<int, int> getMaxIdx(vector<vector<int>> &pjsummands, vector<vector<int>> &pj);
+
+
+/*void buildSlots(vector<vector<int>> &p0, vector<vector<int>> &p1, vector<vector<int>> &p2,
 vector<vector<vector<int>>> &t0, vector<vector<vector<int>>> &t1, vector<vector<vector<int>>> &t2);
+*/
 
 // helper functions
 vector<vector <double> > sortByCol(int sortBy, vector<vector<double>> &unsrtMat);
@@ -41,8 +50,10 @@ void print2DVector(vector<vector<double> > &myvec);
 void print2DIntVector(vector<vector<int> > &myvec);
 void print1DIntVector(vector<int> &myvec);
 void print1DVector(vector<double> &myvec);
+void print1DBoolVector(vector<bool> &myvec);
 tuple<bool, int> findPathInList(vector<int> &path, vector<vector<int>> &list);
 bool hasRepeats(vector<int> &myvec);
+vector<vector<int>> symDiff(vector<vector<int>> &arr1, vector<vector<int>> &arr2);
 
 // Global variable
 const int maxTime = 10000;
@@ -105,27 +116,199 @@ in the vector of bools labeled pXmarked.
 Indices of pXmarked agree with pX.
 */
     // all p0 are marked.
+    vector<bool> p0marked(p0.size(),true);
     vector<bool> p1marked(p1.size(),false);
     vector<bool> p2marked(p2.size(),false);
 
 // Build slots
-    vector<vector<vector<int>>> t0, t1, t2;
+    vector<vector<vector<int>>> t0(p0.size());
+    vector<vector<vector<int>>> t1(p1.size());
+    vector<vector<vector<int>>> t2(p2.size());
+    
+// this goes inside loop
+    print2DIntVector(p1);
+
+    // adding 0 at end bc all are 0-paths
+    vector<vector<int>> summands0;
+    int maxIdx0;
+
+    int j = 0;
+
+    tie(summands0, maxIdx0) = basisChange(p1[0],p0marked, p0,t0);
+    t0[maxIdx0] = summands0;
+    cout << "at t0 index " << maxIdx0 << " we have " << endl;
+    print2DIntVector(t0[maxIdx0]);
+    cout << "next"<<endl;
+
+    j = 1;
+
+    tie(summands0, maxIdx0) = basisChange(p1[1],p0marked, p0,t0);
+    t0[maxIdx0] = summands0;
+    cout << "at t0 index " << maxIdx0 << " we have " << endl;
+    print2DIntVector(t0[maxIdx0]);
+    cout << "next"<<endl;
+
+    j = 2;
+
+    tie(summands0, maxIdx0) = basisChange(p1[2],p0marked, p0,t0);
+    if (summands0.empty()){
+        cout << "empty sum" << endl;
+        p1marked[j] = true;
+
+        t0[maxIdx0] = summands0;
+        cout << "at t0 index " << maxIdx0 << " we have " << endl;
+        print2DIntVector(t0[maxIdx0]);
+    }
+    
+    cout << "marked 0" << endl;
+    print1DBoolVector(p0marked);
+    cout << "marked 1" << endl;
+    print1DBoolVector(p1marked);
+
+
+
+
 
     return 0;
 }
 
-void buildSlots(vector<vector<int>> &p0, vector<vector<int>> &p1, vector<vector<int>> &p2,
-vector<vector<vector<int>>> &t0, vector<vector<vector<int>>> &t1, vector<vector<vector<int>>> &t2){
+
+tuple<vector<vector<int>>, int> basisChange(vector<int> &kpath, 
+vector<bool> &pjmarked, vector<vector<int>> &pj, vector<vector<vector<int>>> &tj){
 /*
-Build linear arrays for 0, 1, 2 paths.
-For now, hardcoding t0, t1, t2 instead
-of adding an extra vector dimension.
+Column reduction operation. Here j = k-1.
+Take a k-path, compute its boundary summands.
+
+Differs from PPH algorithm 2, only returns u and i.
+u = "good" summands
+i = max index of a summand
+
+Thus need an extra function to compute et, the entry time.
+*/
+    int maxIdx;
+    vector<vector<int>> summands;
+    summands = simpleBoundary(kpath);
+/*
+Remove unmarked summands. All 0-paths are marked, so don't
+need this if k = 1;
 */
 
+    if (kpath.size()>1){
+        summands = removeUnmarked(summands, pjmarked, pj);
+    }
+    print1DIntVector(kpath);
+    cout << "boundary" << endl;
+    print2DIntVector(summands);
+
+    // Loop will start here
+    while (!summands.empty()){ 
+    /*
+    Find term with highest index
+    */
+        int summandIdx;
+        tie(maxIdx,summandIdx)=getMaxIdx(summands,pj);
+        cout << "maxidx is " << maxIdx << endl;
+        cout << "summandidx is " << summandIdx << endl;
 
 
+        cout << "is spot empty?" << tj[maxIdx].empty() << endl;
+
+        if (tj[maxIdx].empty()){
+            // if empty, break out of loop
+            break;
+        }
+        // column reduction step
+        // 
+        summands = symDiff(summands, tj[maxIdx]);
+        cout << "summands are " << endl;
+        print2DIntVector(summands);
+    }
+
+    if (summands.empty()){
+        cout << "ok got empty summand" << endl;
+    }
+
+    return make_tuple(summands, maxIdx);
 }
 
+vector<vector<int>> symDiff(vector<vector<int>> &arr1, vector<vector<int>> &arr2){
+/* builds the symmetric difference of two lists of j-paths
+*/
+    vector<vector<int>> res;
+    vector<int> tmp;
+
+    bool found_tmp;
+    int index_found_tmp;
+
+    // for each row of arr1, if not in arr2, add to res
+    for (int i = 0; i<arr1.size(); ++i){
+        tmp = arr1[i];
+        tie(found_tmp,index_found_tmp)=findPathInList(tmp,arr2);
+        if (!found_tmp){
+            res.push_back(tmp);
+        }
+    }
+    // for each row of arr2, if not in arr1, add to res
+    for (int i = 0; i<arr2.size(); ++i){
+        tmp = arr2[i];
+        tie(found_tmp,index_found_tmp)=findPathInList(tmp,arr1);
+        if (!found_tmp){
+            res.push_back(tmp);
+        }
+    }
+    return res;
+}
+
+
+
+tuple<int, int> getMaxIdx(vector<vector<int>> &pjsummands, vector<vector<int>> &pj){
+/* given a list of j-paths,
+pick out the j-path which has the 
+greatest index in pj. return 
+this index as maxIdx. also return the 
+index of the summand achieving maxIdx
+as summandIdx */
+    int maxIdx, summandIdx;
+    vector<int> tmp;
+    bool found_tmp;
+    int index_found_tmp;
+
+    // initialize using 0th summand provided
+    summandIdx = 0;
+    tmp = pjsummands[summandIdx];
+    tie(found_tmp,index_found_tmp)=findPathInList(tmp,pj);
+    maxIdx = index_found_tmp;
+
+    // see if other summands have higher index
+    for (int i =1; i < pjsummands.size(); ++i){
+        tmp = pjsummands[i];
+        tie(found_tmp,index_found_tmp)=findPathInList(tmp,pj);
+        if (index_found_tmp > maxIdx){
+            // if bigger index found, update
+            summandIdx = i;
+            maxIdx = index_found_tmp;
+        }
+    }
+
+    return make_tuple(maxIdx,summandIdx);
+}
+
+vector<vector<int>> removeUnmarked(vector<vector<int>> &pjsummands, vector<bool> &pjmarked, vector<vector<int>> &pj){
+    vector<vector<int>> newSummands;
+    vector<int> tmp;
+    bool found_tmp;
+    int index_found_tmp;
+
+    for (int i = 0; i < pjsummands.size(); ++i){
+        tmp = pjsummands[i];
+        tie(found_tmp,index_found_tmp)=findPathInList(tmp,pj);
+        if (pjmarked[index_found_tmp]==true){
+            newSummands.push_back(tmp);
+        }
+    }
+
+    return newSummands;
+}
 
 void addInfAPaths(vector<vector<int>> &p1, vector<double> &p1time, vector<vector<int>> &p2){
     /* go through 2-paths, see which "missing"
@@ -160,7 +343,6 @@ void addInfAPaths(vector<vector<int>> &p1, vector<double> &p1time, vector<vector
         }     
     }
 }
-
 
 
 
@@ -372,6 +554,14 @@ out all the values of a 2d vector of ints
 
 void print1DIntVector(vector<int> &myvec){
 /* Print all values of int vector
+*/
+    for (int i = 0; i < myvec.size(); i++){
+        cout << myvec[i] << endl;
+    }
+}
+
+void print1DBoolVector(vector<bool> &myvec){
+/* Print all values of bool vector
 */
     for (int i = 0; i < myvec.size(); i++){
         cout << myvec[i] << endl;
