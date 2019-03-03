@@ -26,9 +26,14 @@ using namespace std;
 
 // main functions for pph
 tuple<int, vector<vector<double> > > readFile(string fileName);
-vector<int> getp0(int numNodes);
+vector<vector<int>> getp0(int numNodes);
 tuple<vector<double>, vector<vector<int>>> getp1(vector<vector<double>> &edgeData);
 tuple<vector<double>, vector<vector<int>>> getp2(vector<vector<double>> &edgeData);
+vector<vector<int>> simpleBoundary(vector<int> &path);
+void addInfAPaths(vector<vector<int>> &p1, vector<double> &p1time, vector<vector<int>> &p2);
+
+void buildSlots(vector<vector<int>> &p0, vector<vector<int>> &p1, vector<vector<int>> &p2,
+vector<vector<vector<int>>> &t0, vector<vector<vector<int>>> &t1, vector<vector<vector<int>>> &t2);
 
 // helper functions
 vector<vector <double> > sortByCol(int sortBy, vector<vector<double>> &unsrtMat);
@@ -37,18 +42,22 @@ void print2DIntVector(vector<vector<int> > &myvec);
 void print1DIntVector(vector<int> &myvec);
 void print1DVector(vector<double> &myvec);
 tuple<bool, int> findPathInList(vector<int> &path, vector<vector<int>> &list);
+bool hasRepeats(vector<int> &myvec);
 
+// Global variable
+const int maxTime = 10000;
 
 // Start here
 int main()
 {
+    
     int numNodes;
     vector<vector<double> > edgeData;
     string fileName;
     fileName = "cyc3.txt";
 
     tie(numNodes,edgeData) = readFile(fileName);
-    vector<int> p0 = getp0(numNodes);
+    vector<vector<int>> p0 = getp0(numNodes);
     vector<vector<int>> p1;
     vector<double> p1time;
     tie(p1time,p1) = getp1(edgeData);
@@ -57,22 +66,138 @@ int main()
     vector<double> p2time;
     tie(p2time,p2) = getp2(edgeData);
     
-    print2DIntVector(p1);
+    //print2DIntVector(p1);
+    /*
     vector<int> tmp;
+    tmp.push_back(1);
     tmp.push_back(2);
-    tmp.push_back(3);
-    print1DIntVector(tmp);
+    tmp.push_back(1);
+    */
+    //print1DIntVector(tmp);
 
-    bool found_tmp;
-    int index_found_tmp;
-    tie(found_tmp,index_found_tmp)=findPathInList(tmp,p1);
-    cout << "found_tmp " << found_tmp << endl;
-    cout << "index " << index_found_tmp << endl;
+    //bool found_tmp;
+    //int index_found_tmp;
+    //tie(found_tmp,index_found_tmp)=findPathInList(tmp,p1);
+
+    //cout << "found_tmp " << found_tmp << endl;
+    //cout << "index " << index_found_tmp << endl;
     //isPathInList(tmp,p1);
-    //cout << "here goes" << endl;
-    //print2DIntVector(p2);
-    //print1DVector(p2time);
+
+
+    //vector<vector<int>> summands = simpleBoundary(tmp);
+    //print2DIntVector(summands);
+
+    addInfAPaths(p1,p1time,p2);
+    //print2DIntVector(p1);
+    //print1DVector(p1time);
+    //print2DIntVector(p0);
+
+
+
+/*
+Marked paths
+Different from python implementation.
+Instead of checking if a summand is in 
+the pool of marked paths, we actually find
+the index of the summand in the corresponding list.
+then we set that index to true (to denote marked)
+in the vector of bools labeled pXmarked.
+Indices of pXmarked agree with pX.
+*/
+    // all p0 are marked.
+    vector<bool> p1marked(p1.size(),false);
+    vector<bool> p2marked(p2.size(),false);
+
+// Build slots
+    vector<vector<vector<int>>> t0, t1, t2;
+
     return 0;
+}
+
+void buildSlots(vector<vector<int>> &p0, vector<vector<int>> &p1, vector<vector<int>> &p2,
+vector<vector<vector<int>>> &t0, vector<vector<vector<int>>> &t1, vector<vector<vector<int>>> &t2){
+/*
+Build linear arrays for 0, 1, 2 paths.
+For now, hardcoding t0, t1, t2 instead
+of adding an extra vector dimension.
+*/
+
+
+
+}
+
+
+void addInfAPaths(vector<vector<int>> &p1, vector<double> &p1time, vector<vector<int>> &p2){
+    /* go through 2-paths, see which "missing"
+    paths need to be added at infinity*/
+    vector<int> tmp;
+    bool hasRep;
+    bool inp1;
+    int index_found_tmp;
+    int lp = p2[0].size();
+
+    for (int i = 0; i<p2.size(); ++i){
+        for (int j = 0; j < lp; ++j){
+            for (int k = 0; k< lp; ++k){
+                if (k!=j){
+                    tmp.push_back(p2[i][k]);
+                }         
+            }
+            //print1DIntVector(tmp);
+            hasRep = hasRepeats(tmp);
+            tie(inp1,index_found_tmp)=findPathInList(tmp,p1);
+                if (hasRep==0 && inp1==0){
+                    p1.push_back(tmp);
+                    p1time.push_back(maxTime);
+                }
+                tmp.clear();
+            /*
+            cout << "has rep" << hasRepeats(tmp) << endl;
+            cout << "inp1 " << inp1 << endl;
+            cout << "next" << endl;
+            */
+            tmp.clear();          
+        }     
+    }
+}
+
+
+
+
+vector<vector<int>> simpleBoundary(vector<int> &path){
+/*
+Compute the boundary summands of a p-path, p>= 1.
+*/
+    vector<vector<int>> summands;
+    vector<int> tmp;
+    /* 
+    outer loop is the hat operator.
+    it says which index to exclude.
+    */
+    for (int i = 0; i< path.size();++i){
+        for (int j = 0; j < path.size(); ++j){
+            if (i!=j){
+                tmp.push_back(path[j]);
+            }
+        }
+        // summand built, now test for repeats
+        if (hasRepeats(tmp)==false){
+            summands.push_back(tmp);
+        }
+        tmp.clear();
+    }
+    return summands;
+}
+
+
+bool hasRepeats(vector<int> &myvec){
+    bool rep = false;
+    for (int i =0; i< myvec.size()-1; ++i){
+        if (myvec[i] == myvec[i+1]){
+            rep = true;
+        }
+    }
+    return rep;
 }
 
 tuple<bool, int> findPathInList(vector<int> &path, vector<vector<int>> &list){
@@ -166,11 +291,14 @@ tuple<vector<double>, vector<vector<int>>> getp1(vector<vector<double> > &edgeDa
     return make_tuple(p1time,p1);
 }
 
-vector<int> getp0(int numNodes){
+vector<vector <int>> getp0(int numNodes){
 // get 0 paths
-    vector<int> p0;
+    vector<vector<int>> p0;
+    vector<int> tmp;
     for (int i=1; i<= numNodes; i++){
-        p0.push_back(i);
+        tmp.push_back(i);
+        p0.push_back(tmp);
+        tmp.clear();
     }
     return p0;
 }
