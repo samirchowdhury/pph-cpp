@@ -1,18 +1,9 @@
 /*
-Code to compute persistent path homology of a network.
+Code to compute 1-dimensional persistent path homology of a network.
 
 Author: Samir Chowdhury
-Date: ()
+Date: March 26, 2019
 
-To-do as of March 3, 2019:
-- main file is very cluttered. modularize.
-- only finite 1-dim persistence is being reported 
-right now. need to add code to read the infinite
-1-dim bars as well. 
-- also find a way to pipe the data file 
-directly from the terminal
-- add functionality for timing the code
-- return pers1 as a text file
 
 Compile with options:
 clang++ -std=c++11 -Ofast -march=native computePPH.cpp -o computePPH
