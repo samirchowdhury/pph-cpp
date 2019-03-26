@@ -36,11 +36,11 @@ After compilation, use the code as follows (in a terminal window):
 
 cycleNet10.txt
 
-*done! pers1 is 
+*done! pers1 is *
 
-1 5 
+*1 5 *
 
-time elapsed 21 milliseconds*
+*time elapsed 21 milliseconds*
 
 
 The output is saved in csv format as res_cycleNet10.txt.
