@@ -12,8 +12,13 @@ right now. need to add code to read the infinite
 - also find a way to pipe the data file 
 directly from the terminal
 - add functionality for timing the code
+- return pers1 as a text file
 
-
+Compile with options:
+clang++ -std=c++11 -Ofast -march=native computePPH.cpp -o computePPH
+Or
+clang++ -std=c++11 computePPH.cpp -o computePPH
+./computePPH
 
 */
 
@@ -24,13 +29,12 @@ directly from the terminal
 #include<algorithm>
 #include<tuple>
 #include<sstream>
+#include<chrono> 
 
 
-// compile as 
-// clang++ -std=c++11 computePPH.cpp -o computePPH
-// ./computePPH
 
 using namespace std;
+using namespace std::chrono;
 
 // FUNCTION DECLARATIONS HERE
 
@@ -76,7 +80,13 @@ int main()
     vector<vector<double> > edgeData;
     string fileName;
     //fileName = "cyc3.txt";
-    fileName = "cycleNet25.txt";
+    //fileName = "cycleNet10.txt";
+    //fileName = "randNet4.txt";
+
+    // try redirecting input text (from terminal) to fileName
+    cout << "Type in a file name (e.g. 'cycleNet10.txt')" << endl;
+    cin >> fileName;
+
 
     tie(numNodes,edgeData) = readFile(fileName);
     vector<vector<int>> p0 = getp0(numNodes);
@@ -112,6 +122,9 @@ Indices of pXmarked agree with pX.
     vector<vector<vector<int>>> t1(p1.size());
     vector<vector<vector<int>>> t2(p2.size());
     
+// timer starts now
+    auto start = high_resolution_clock::now();    
+
 // Loop over 1-paths
     //print2DIntVector(p1);
     // adding 0 at end bc all are 0-paths
@@ -217,8 +230,13 @@ Indices of pXmarked agree with pX.
     cout << "let's check slots" << endl;
     print2DIntVector(t1[5]);
     */
-    cout << "done!" << "pers1 is " << endl;
+    // stop timer
+    auto stop = high_resolution_clock::now(); 
+    auto duration = duration_cast<milliseconds>(stop - start); 
+    
+    cout << "done! " << "pers1 is " << endl;
     print2DIntVector(pers1);
+    cout << "time elapsed " << duration.count() << " milliseconds" << endl;
     return 0;
 }
 
@@ -596,7 +614,7 @@ out all the values of a 2d vector of ints
 
     for (int i = 0; i < myvec.size(); i++){
         for (int j = 0; j < myvec[i].size(); j++){
-            cout << myvec[i][j];
+            cout << myvec[i][j] << " ";
         }
         cout << endl;
     }
