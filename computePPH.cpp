@@ -83,7 +83,7 @@ int main()
     //fileName = "cycleNet10.txt";
     //fileName = "randNet4.txt";
 
-    // try redirecting input text (from terminal) to fileName
+    // ask user (from terminal) for fileName
     cout << "Type in a file name (e.g. 'cycleNet10.txt')" << endl;
     cin >> fileName;
 
@@ -177,6 +177,7 @@ Indices of pXmarked agree with pX.
 
     }
     //print1DBoolVector(p1marked);
+    
 
 
 // Loop over 2-paths
@@ -185,11 +186,12 @@ Indices of pXmarked agree with pX.
     vector<vector<int>> summands1;
     int maxIdx1;
 
-    int birth;
-    int death;
-    vector<int> tmpPers;
+    //types should match that of pers1
+    double birth;
+    double death;
+    vector<double> tmpPers; 
 
-    vector<vector<int>> pers1;
+    vector<vector<double>> pers1;//should be double
 
     for (int j = 0; j<p2.size(); ++j){
 
@@ -230,12 +232,45 @@ Indices of pXmarked agree with pX.
     cout << "let's check slots" << endl;
     print2DIntVector(t1[5]);
     */
+
+    // now pick up infinite pers bars
+    /*
+    if a slot is marked and empty, get its 
+    entry time (=allow time for 1-paths).
+    This is the birth time. 
+    Death time will be maxTime.
+    */
+    death = maxTime; //death time is fixed 
+    tmpPers.clear(); 
+    for (int i = 0; i<p1marked.size();++i){
+        if (p1marked[i]==true && t1[i].empty()){
+            birth = p1time[i];
+            tmpPers.push_back(birth);   
+            tmpPers.push_back(death);
+            pers1.push_back(tmpPers);
+            tmpPers.clear();
+        }
+    }
+    
+    // write output to file
+    ofstream outputfile;
+    outputfile.open ("res_"+fileName);
+    for (int i = 0; i < pers1.size(); i++){
+        for (int j = 0; j < pers1[i].size(); j++){
+            outputfile << pers1[i][j] << ", ";
+        }
+        outputfile << '\n';
+    }
+    outputfile.close();
+    
+
+
     // stop timer
     auto stop = high_resolution_clock::now(); 
     auto duration = duration_cast<milliseconds>(stop - start); 
     
     cout << "done! " << "pers1 is " << endl;
-    print2DIntVector(pers1);
+    print2DVector(pers1);
     cout << "time elapsed " << duration.count() << " milliseconds" << endl;
     return 0;
 }
