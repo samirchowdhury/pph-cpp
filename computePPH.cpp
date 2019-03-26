@@ -255,9 +255,12 @@ Indices of pXmarked agree with pX.
     // write output to file
     ofstream outputfile;
     outputfile.open ("res_"+fileName);
-    for (int i = 0; i < pers1.size(); i++){
-        for (int j = 0; j < pers1[i].size(); j++){
-            outputfile << pers1[i][j] << ", ";
+    for (int i = 0; i < pers1.size(); ++i){
+        for (int j = 0; j < pers1[i].size(); ++j){
+            outputfile << pers1[i][j]; 
+            if (j ==0 ){
+                outputfile << ", ";
+            }
         }
         outputfile << '\n';
     }
